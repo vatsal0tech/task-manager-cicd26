@@ -1,0 +1,79 @@
+name: Docker Compose Integration Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  integration-test:
+    name: Test Full Stack with Docker Compose
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create .env file
+      run: |
+        echo "DEBUG=True" > .env
+        echo "SECRET_KEY=test-secret-key" >> .env
+        echo "DB_NAME=taskmanager" >> .env
+        echo "DB_USER=postgres" >> .env
+        echo "DB_PASSWORD=postgres" >> .env
+        echo "DB_HOST=db" >> .env
+
+    - name: Build containers
+      run: docker-compose build
+
+    - name: Start containers
+      run: docker-compose up -d
+
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for backend..."
+        for i in {1..30}; do
+          if curl -f http://localhost:8000/api/tasks/ > /dev/null 2>&1; then
+            echo "Backend is ready!"
+            break
+          fi
+          echo "Attempt $i: Backend not ready yet..."
+          sleep 2
+        done
+        
+        echo "Waiting for frontend..."
+        for i in {1..30}; do
+          if curl -f http://localhost:80 > /dev/null 2>&1; then
+            echo "Frontend is ready!"
+            break
+          fi
+          echo "Attempt $i: Frontend not ready yet..."
+          sleep 2
+        done
+
+    - name: Test backend API
+      run: |
+        # Test task creation
+        curl -X POST http://localhost:8000/api/tasks/ \
+          -H "Content-Type: application/json" \
+          -d '{"title":"Test Task","priority":"high"}' \
+          -f || exit 1
+        
+        # Test task retrieval
+        curl -f http://localhost:8000/api/tasks/ || exit 1
+
+    - name: Test frontend accessibility
+      run: curl -f http://localhost:80 || exit 1
+
+    - name: Show container logs
+      if: failure()
+      run: |
+        echo "=== Backend Logs ==="
+        docker-compose logs backend
+        echo "=== Frontend Logs ==="
+        docker-compose logs frontend
+
+    - name: Stop containers
+      if: always()
+      run: docker-compose down -v
