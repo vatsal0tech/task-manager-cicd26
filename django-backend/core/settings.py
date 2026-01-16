@@ -2,6 +2,7 @@
 Django settings for core project.
 """
 
+import sys
 from pathlib import Path
 from decouple import config
 
@@ -74,7 +75,6 @@ DATABASES = {
 }
 
 # Override with SQLite for testing
-import sys
 if 'pytest' in sys.modules:
     DATABASES = {
         'default': {
