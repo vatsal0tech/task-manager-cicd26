@@ -25,10 +25,10 @@ jobs:
         echo "DB_HOST=db" >> .env
 
     - name: Build containers
-      run: docker-compose build
+      run: docker compose build
 
     - name: Start containers
-      run: docker-compose up -d
+      run: docker compose up -d
 
     - name: Wait for services to be ready
       run: |
@@ -70,10 +70,10 @@ jobs:
       if: failure()
       run: |
         echo "=== Backend Logs ==="
-        docker-compose logs backend
+        docker compose logs backend
         echo "=== Frontend Logs ==="
-        docker-compose logs frontend
+        docker compose logs frontend
 
     - name: Stop containers
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
