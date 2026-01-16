@@ -105,14 +105,14 @@ jobs:
         run: docker build -t task-manager-frontend:latest .
 
       - name: Login to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.DOCKER_USERNAME
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.DOCKER_USERNAME
         working-directory: ./react-frontend
         run: |
           docker tag task-manager-frontend:latest ${{ secrets.DOCKER_USERNAME }}/task-manager-frontend:latest
