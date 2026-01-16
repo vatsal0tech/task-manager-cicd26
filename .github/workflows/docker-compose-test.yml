@@ -30,10 +30,20 @@ jobs:
     - name: Start containers
       run: docker compose up -d
 
+    - name: Check container status
+      run: docker compose ps
+
+    - name: Show initial logs
+      run: |
+        echo "=== Initial Backend Logs ==="
+        docker compose logs backend | head -20
+        echo "=== Initial DB Logs ==="
+        docker compose logs db | head -20
+
     - name: Wait for services to be ready
       run: |
         echo "Waiting for backend..."
-        for i in {1..30}; do
+        for i in {1..60}; do
           if curl -f http://localhost:8000/api/tasks/ > /dev/null 2>&1; then
             echo "Backend is ready!"
             break
